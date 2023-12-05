@@ -1,187 +1,90 @@
-const knex = require("knex")({
-  client: "mysql",
-  connection: {
-    host: "localhost",
-    port: 3306,
-    user: "root",
-    database: "IPL",
-  },
-});
+const getMatchesPlayedPerYear = require("./queries/matchesPlayedPerYear");
+const getMatchesWonPerTeam = require("./queries/matchesWonPerTeam");
+const getExtraRunsConceded = require("./queries/extraRunsConceded");
+const getTopEconomicalBowlers = require("./queries/topEconomicalBowlers");
+const getTossAndMatchWins = require("./queries/tossAndMatchWins");
+const getHighestPlayerOfTheMatchAwards = require("./queries/highestPlayerOfTheMatchAwards");
+const getBatsmanStrikeRatePerSeason = require("./queries/batsmanStrikeRatePerSeason");
+const getMostDismissalsByBowler = require("./queries/mostDismissalsByBowler");
+const getBestEconomyInSuperOvers = require("./queries/bestEconomyInSuperOvers");
 
-// Number of matches played per year for all the years in IPL.
-knex("matches")
-  .select("season")
-  .count("* as matches played")
-  .groupBy("season")
+// Execute and console the results
+getMatchesPlayedPerYear()
   .then((result) => {
+    console.log("Matches Played Per Year:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Number of matches won per team per year in IPL.
-knex("matches")
-  .select("season", "winner AS team")
-  .count("* as matches_won")
-  .groupBy("season", "winner")
-
+getMatchesWonPerTeam()
   .then((result) => {
+    console.log("Matches Won Per Team Per Year:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Extra runs conceded per team in the year 2016
-knex("deliveries AS d")
-  .select(
-    "d.bowling_team",
-    knex.raw("SUM(d.extra_runs) AS extra_runs_conceded")
-  )
-  .join("matches", "d.match_id", "=", " matches.id")
-  .where("matches.season", "=", "2016")
-  .groupBy("d.bowling_team")
-
+getExtraRunsConceded()
   .then((result) => {
+    console.log("Extra Runs Conceded Per Team in 2016:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Top 10 economical bowlers in the year 2015
-knex("deliveries")
-  .select(
-    "bowler",
-    knex.raw("ROUND(SUM(total_runs)/(COUNT(*)/6),2) AS economy")
-  )
-  .join("matches", "deliveries.match_id", "=", " matches.id")
-  .where("matches.season", "=", "2015")
-  .groupBy("bowler")
-  .orderBy("economy")
-  .limit("10")
+getTopEconomicalBowlers("2015")
   .then((result) => {
+    console.log("Top 10 Economical Bowlers in 2015:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Find the number of times each team won the toss and also won the match
-const query5 = knex("matches")
-  .select("winner AS team")
-  .whereRaw("toss_winner=winner");
-
-knex
-  .select("team", knex.raw("COUNT(*) AS toss_and_match_wins"))
-  .from(query5.as("toss_and_match"))
-  .groupBy("team")
+getTossAndMatchWins()
   .then((result) => {
+    console.log("Toss and Match Wins by Each Team:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
-
-// Find a player who has won the highest number of Player of the Match awards for each season
-knex
-  .select("season", "player_of_match")
-  .count("* as num_awards")
-  .from("matches")
-  .groupBy("season", "player_of_match")
-  .having(knex.raw("COUNT(*)"), "=", function () {
-    this.select(knex.raw("COUNT(*)"))
-      .from("matches as m2")
-      .whereRaw("m2.season = matches.season")
-      .groupBy("player_of_match")
-      .orderBy(knex.raw("COUNT(*)"), "DESC")
-      .limit(1);
-  })
-  .orderBy("season")
+getHighestPlayerOfTheMatchAwards()
   .then((result) => {
+    console.log("Highest Player of the Match Awards Per Season:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Find the strike rate of a batsman for each season
-knex("deliveries as d")
-  .select(
-    "m.season",
-    "d.batsman",
-    knex.raw(
-      "ROUND(SUM(d.batsman_runs)* 100.0 / COUNT(d.ball),2) AS strike_rate"
-    )
-  )
-  .join(knex.raw("matches as m ON d.match_id=m.id"))
-  .where("d.batsman", "=", "V Kohli")
-  .groupBy("m.season")
-  .groupBy("d.batsman")
-  .orderBy("m.season")
+getBatsmanStrikeRatePerSeason("V Kohli")
   .then((result) => {
+    console.log("Batsman Strike Rate Per Season for V Kohli:");
     console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Find the highest number of times one player has been dismissed by another player
-knex("deliveries")
-  .select("player_dismissed", "bowler", knex.raw("COUNT(*) AS dismissal_count"))
-  .whereRaw("player_dismissed != ''")
-  .groupBy("player_dismissed")
-  .groupBy("bowler")
-  .orderBy("dismissal_count", "DESC")
-  .limit(1)
-  .then((results) => {
-    console.log(results);
+getMostDismissalsByBowler()
+  .then((result) => {
+    console.log("Most Dismissals by a Bowler:");
+    console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
 
-// Find the bowler with the best economy in super overs
-knex("deliveries")
-  .select(
-    "bowler",
-    knex.raw("ROUND(SUM(total_runs)/(COUNT(*)/6),2) AS economy")
-  )
-  .where("is_super_over", "=", "1")
-  .groupBy("bowler")
-  .orderBy("economy")
-  .limit(1)
-  .then((results) => {
-    console.log(results);
+getBestEconomyInSuperOvers()
+  .then((result) => {
+    console.log("Bowler with the Best Economy in Super Overs:");
+    console.log(result);
   })
   .catch((error) => {
     console.error(error);
-  })
-  .finally(() => {
-    knex.destroy();
   });
