@@ -7,84 +7,63 @@ const getHighestPlayerOfTheMatchAwards = require("./queries/highestPlayerOfTheMa
 const getBatsmanStrikeRatePerSeason = require("./queries/batsmanStrikeRatePerSeason");
 const getMostDismissalsByBowler = require("./queries/mostDismissalsByBowler");
 const getBestEconomyInSuperOvers = require("./queries/bestEconomyInSuperOvers");
+const knex = require("knex");
 
-// Execute and console the results
-getMatchesPlayedPerYear()
-  .then((result) => {
+async function runQueries() {
+  try {
+    // Execute all queries concurrently using Promise.all
+    const [
+      matchesPlayed,
+      matchesWon,
+      extraRuns,
+      topEconomicalBowlers,
+      tossAndMatchWins,
+      highestPlayerOfTheMatchAwards,
+      batsmanStrikeRate,
+      mostDismissals,
+      bestEconomyInSuperOvers,
+    ] = await Promise.all([
+      getMatchesPlayedPerYear(),
+      getMatchesWonPerTeam(),
+      getExtraRunsConceded(),
+      getTopEconomicalBowlers("2015"),
+      getTossAndMatchWins(),
+      getHighestPlayerOfTheMatchAwards(),
+      getBatsmanStrikeRatePerSeason("V Kohli"),
+      getMostDismissalsByBowler(),
+      getBestEconomyInSuperOvers(),
+    ]);
+
     console.log("Matches Played Per Year:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log(matchesPlayed);
 
-getMatchesWonPerTeam()
-  .then((result) => {
-    console.log("Matches Won Per Team Per Year:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log("\nMatches Won Per Team Per Year:");
+    console.log(matchesWon);
 
-getExtraRunsConceded()
-  .then((result) => {
-    console.log("Extra Runs Conceded Per Team in 2016:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log("\nExtra Runs Conceded Per Team in 2016:");
+    console.log(extraRuns);
 
-getTopEconomicalBowlers("2015")
-  .then((result) => {
-    console.log("Top 10 Economical Bowlers in 2015:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log("\nTop 10 Economical Bowlers in 2015:");
+    console.log(topEconomicalBowlers);
 
-getTossAndMatchWins()
-  .then((result) => {
-    console.log("Toss and Match Wins by Each Team:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-getHighestPlayerOfTheMatchAwards()
-  .then((result) => {
-    console.log("Highest Player of the Match Awards Per Season:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log("\nToss and Match Wins by Each Team:");
+    console.log(tossAndMatchWins);
 
-getBatsmanStrikeRatePerSeason("V Kohli")
-  .then((result) => {
-    console.log("Batsman Strike Rate Per Season for V Kohli:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log("\nHighest Player of the Match Awards Per Season:");
+    console.log(highestPlayerOfTheMatchAwards);
 
-getMostDismissalsByBowler()
-  .then((result) => {
-    console.log("Most Dismissals by a Bowler:");
-    console.log(result);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    console.log("\nBatsman Strike Rate Per Season for V Kohli:");
+    console.log(batsmanStrikeRate);
 
-getBestEconomyInSuperOvers()
-  .then((result) => {
-    console.log("Bowler with the Best Economy in Super Overs:");
-    console.log(result);
-  })
-  .catch((error) => {
+    console.log("\nMost Dismissals by a Bowler:");
+    console.log(mostDismissals);
+
+    console.log("\nBowler with the Best Economy in Super Overs:");
+    console.log(bestEconomyInSuperOvers);
+  } catch (error) {
     console.error(error);
-  });
+  }
+}
+
+// Run the queries
+runQueries();
